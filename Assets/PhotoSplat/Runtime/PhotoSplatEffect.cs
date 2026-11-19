@@ -368,6 +368,29 @@ namespace PhotoSplat
             Graphics.RenderMesh(rp, m_Mesh, 0, Matrix4x4.identity);
         }
 
+        [Header("Debug")]
+        [Tooltip("Show input / state text in the top-left of the Game view (Editor only).")]
+        public bool showDebug = true;
+
+        void OnGUI()
+        {
+            if (!showDebug || !Application.isEditor) return;
+            var cam = Camera.main;
+            string photoDist = m_Photo != null ? Vector3.Distance(m_Input.PinchPoint, m_Photo.position).ToString("F2") + " m" : "no photo";
+            var kb = Keyboard.current;
+            var mouse = Mouse.current;
+            GUI.color = Color.black;
+            GUI.Box(new Rect(8, 8, 430, 150), GUIContent.none);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(16, 12, 420, 150),
+                $"PhotoSplat  state: {Current}   gather {m_Gather:F2}  expand {m_Expand:F2}\n" +
+                $"camera: {(cam != null ? cam.name : "NONE (no MainCamera tag)")}\n" +
+                $"input: {(m_Input.UsingHands ? "HANDS" : "mouse/space")}   pinching: {m_Input.IsPinching}\n" +
+                $"keyboard: {(kb != null ? (kb.spaceKey.isPressed ? "space DOWN" : "ok") : "NONE")}   mouse: {(mouse != null ? (mouse.leftButton.isPressed ? "button DOWN" : "ok") : "NONE")}\n" +
+                $"pinch point -> photo centre: {photoDist}   photo placed: {m_PhotoPlaced}\n" +
+                "Hold Space with the cursor on the photo, release to throw. R = reset.");
+        }
+
         void OnDestroy()
         {
             if (m_Mesh != null) Destroy(m_Mesh);
