@@ -5,6 +5,8 @@
 
 技术栈和 InnerFrame 一样：Unity 6000.3.23f1、URP、OpenXR、XR Hands。没有用 `com.meta.xr.*`，以后想合进 InnerFrame 也不冲突。
 
+这个 repo 就是 Unity 项目本身（Mixed Reality 模板 + PhotoSplat）。日常流程：改完代码 push → 你 `git pull` → 回到 Unity 等编译 → Play。
+
 ```
 tools/sharp_to_unity.py        SHARP 的 .ply → Unity 用的 .bytes（只依赖 numpy；Pillow 可选）
 Assets/PhotoSplat/
@@ -38,13 +40,13 @@ sharp predict -i ~/splat/in -o ~/splat/out     # 首次运行会自动下载模�
 
 ```bash
 pip install numpy pillow       # sharp 的环境里一般已经有了
-python tools/sharp_to_unity.py ~/splat/out/autumn.ply \
-    -o <你的Unity项目>/Assets/PhotoSplat/Data/autumn.bytes \
-    --image ~/splat/in/autumn.jpg \
-    --max-splats 150000
+cd ~/PhotoSplat/PhotoSplat          # 这个 repo
+python tools/sharp_to_unity.py ~/splat/out/scene.ply \
+    -o Assets/PhotoSplat/Data/scene.bytes \
+    --image ~/splat/in/scene.jpg
 ```
 
-脚本会输出 `autumn.bytes`（约 7 MB）和 `autumn.jpg`。常用参数：
+直接写进项目的 `Assets/PhotoSplat/Data/`（覆盖旧的同名文件即可换图）。常用参数：
 
 | 参数 | 用途 |
 |---|---|
@@ -55,21 +57,18 @@ python tools/sharp_to_unity.py ~/splat/out/autumn.ply \
 
 ## 3. Unity 项目
 
-1. Unity Hub → New project → 选 **6000.3.23f1** → 模板选 **Mixed Reality**（Unity 自带，已经配好 OpenXR Meta、AR Foundation 透视、XRI 和 XR Hands）。
-2. 把本包的 `Assets/PhotoSplat` 文件夹拷进项目的 `Assets/`。
-3. 打开模板自带的 `SampleScene`。把模板里的示例 UI 和示例物体关掉，避免它们抢捏合手势。
-4. Hierarchy 里新建空物体 `PhotoSplat`，Add Component → **Photo Splat Effect**（会自动加上 Pinch Input）。
-   - **Splat Data** ← `autumn.bytes`
-   - **Photo** ← `autumn.jpg`
-   - 两个 Shader 字段会自动填好；如果是空的，手动选 `PhotoSplat/Splat` 和 `Universal Render Pipeline/Unlit`。
-5. Project Settings → XR Plug-in Management → OpenXR → **Android** 页签：确认勾选 **Hand Tracking Subsystem**（Meta Hand Tracking Aim 也一起勾上）。头显里也要在设置中开启手部追踪。
+1. 打开 `Assets/Scenes/PhotoSplatTest`（空的测试场景），或模板的 `SampleScene`（装到头显时用）。
+2. 菜单 **Tools → PhotoSplat → Add To Scene**：自动创建 `PhotoSplat` 物体，并填好 `Data` 里的 `.bytes`、照片和两个 shader。然后 Cmd+S 保存场景。
+3. 装到头显前：Project Settings → XR Plug-in Management → OpenXR → **Android** 页签，确认勾选 **Hand Tracking Subsystem**（以及 Meta Hand Tracking Aim）；头显里也要开启手部追踪。
 
 ### 先在 Editor 里试（不需要戴头显）
 点 Play：
 - 照片出现在镜头前方偏下的位置
-- **按住鼠标左键**放在照片上 = 捏住，照片碎成粒子，跟着鼠标走
+- 光标放在照片上，**按住空格**（或按下鼠标左键 / 触控板）= 捏住，照片碎成粒子，跟着光标走
 - **松开** = 扔出去，场景展开
-- 场景出现后，**按住左键约 0.4 秒** = 把场景收回手里
+- 场景出现后，**按住约 0.4 秒** = 把场景收回手里
+- Editor 里默认忽略 XR 模拟器的"假手"（Pinch Input 组件上的 Mouse In Editor）
+- Console 里会打印 `[PhotoSplat] ...`：抓到照片、没抓到（离照片多远）、扔出去
 - **滚轮**调整"手"离镜头的距离，**R** 重置
 
 ### 装到 Quest 3

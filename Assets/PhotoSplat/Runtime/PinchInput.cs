@@ -16,6 +16,8 @@ namespace PhotoSplat
         [Tooltip("Fingertips closer than this (m) start a pinch.")] public float pinchOn = 0.02f;
         [Tooltip("Fingertips farther than this (m) end it.")] public float pinchOff = 0.035f;
         [Tooltip("Editor fallback: how far in front of the camera the mouse 'hand' is (m).")] public float editorDistance = 0.4f;
+        [Tooltip("In the Editor, ignore hand tracking (incl. the XR Interaction Simulator's fake hands) and use mouse / Space.")]
+        public bool mouseInEditor = true;
 
         public bool IsPinching { get; private set; }
         public bool PinchStarted { get; private set; }
@@ -44,7 +46,8 @@ namespace PhotoSplat
             }
 
             bool anyTracked = false;
-            if (m_Hands != null && cam != null)
+            bool useHands = !(Application.isEditor && mouseInEditor);
+            if (useHands && m_Hands != null && cam != null)
             {
                 // hand joint poses are in the same tracking space as the head (the camera's local pose)
                 Transform space = cam.transform.parent;
@@ -81,7 +84,9 @@ namespace PhotoSplat
                 m_Owner = -1;
                 BothPinching = false;
                 var mouse = Mouse.current;
-                IsPinching = mouse != null && mouse.leftButton.isPressed;
+                // left mouse button / trackpad click, or hold Space
+                IsPinching = (mouse != null && mouse.leftButton.isPressed)
+                          || (Keyboard.current != null && Keyboard.current.spaceKey.isPressed);
                 if (mouse != null && cam != null)
                 {
                     editorDistance = Mathf.Clamp(editorDistance + mouse.scroll.ReadValue().y * 0.0005f, 0.15f, 3f);

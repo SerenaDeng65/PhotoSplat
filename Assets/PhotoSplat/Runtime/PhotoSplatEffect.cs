@@ -209,8 +209,11 @@ namespace PhotoSplat
             switch (Current)
             {
                 case State.Idle:
-                    if (m_Input.PinchStarted && m_PhotoPlaced && TryGrab(p))
+                    if (m_Input.PinchStarted && m_PhotoPlaced && !TryGrab(p))
+                        Debug.Log($"[PhotoSplat] Pinch at {p} missed the photo (photo at {m_Photo.position}, {Vector3.Distance(p, m_Photo.position):F2} m away)");
+                    else if (m_Input.PinchStarted && m_PhotoPlaced)
                     {
+                        Debug.Log("[PhotoSplat] Grabbed the photo");
                         m_Photo.gameObject.SetActive(false);
                         m_Gather = 0f;
                         Current = State.Gathering;
@@ -276,6 +279,7 @@ namespace PhotoSplat
             m_SceneRoot.localScale = Vector3.one * s;
             m_SceneMoved = true;
             m_Expand = 0f;
+            Debug.Log($"[PhotoSplat] Thrown: scene scale {s:F2}, facing {dir}");
             Current = State.Expanding;
         }
 
